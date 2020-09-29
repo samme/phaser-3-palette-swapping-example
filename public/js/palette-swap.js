@@ -10,7 +10,7 @@ var config = {
     }
 };
 
-var game = new Phaser.Game(config);
+new Phaser.Game(config);
 
 function preload ()
 {
@@ -43,7 +43,7 @@ function create ()
     };
 
     // Create the dynamic spritesheets and animations.
-    createPalettes(animConfig);
+    createPalettes.call(this, animConfig);
 
     // -- DEMO -- \\
     // Add text.
@@ -104,7 +104,9 @@ function createPalettes (config)
     var colorLookup = {};
     var x, y;
     var pixel, palette;
-    var paletteWidth = game.textures.get(config.paletteKey).getSourceImage().width;
+    var textures = this.textures;
+    var paletteWidth = textures.get(config.paletteKey).getSourceImage().width;
+    var anims = this.anims;
 
     // Go through each pixel in the palette image and add it to the color lookup.
     for (y = 0; y < config.paletteNames.length; y++) {
@@ -112,13 +114,13 @@ function createPalettes (config)
         colorLookup[palette] = [];
 
         for (x = 0; x < paletteWidth; x++) {
-            pixel = game.textures.getPixel(x, y, config.paletteKey);
+            pixel = textures.getPixel(x, y, config.paletteKey);
             colorLookup[palette].push(pixel);
         }
     }
 
     // Create sheets and animations from base sheet.
-    var sheet = game.textures.get(config.spriteSheet.key).getSourceImage();
+    var sheet = textures.get(config.spriteSheet.key).getSourceImage();
     var atlasKey, anim, animKey;
     var canvasTexture, canvas, context, imageData, pixelArray;
 
@@ -128,7 +130,7 @@ function createPalettes (config)
         atlasKey = config.spriteSheet.key + '-' + palette;
 
         // Create a canvas to draw new image data onto.
-        canvasTexture = game.textures.createCanvas(config.spriteSheet.key + '-temp', sheet.width, sheet.height);
+        canvasTexture = textures.createCanvas(config.spriteSheet.key + '-temp', sheet.width, sheet.height);
         canvas = canvasTexture.getSourceImage();
         context = canvas.getContext('2d');
 
@@ -171,7 +173,7 @@ function createPalettes (config)
         context.putImageData(imageData, 0, 0);
 
         // Add the canvas as a sprite sheet to the game.
-        game.textures.addSpriteSheet(atlasKey, canvasTexture.getSourceImage(), {
+        textures.addSpriteSheet(atlasKey, canvasTexture.getSourceImage(), {
             frameWidth: config.spriteSheet.frameWidth,
             frameHeight: config.spriteSheet.frameHeight,
         });
@@ -182,21 +184,21 @@ function createPalettes (config)
             animKey = atlasKey + '-' + anim.key;
 
             // Add the animation to the game.
-            game.anims.create({
+            anims.create({
                 key: animKey,
-                frames: game.anims.generateFrameNumbers(atlasKey, {start: anim.startFrame, end: anim.endFrame}),
+                frames: anims.generateFrameNumbers(atlasKey, {start: anim.startFrame, end: anim.endFrame}),
                 frameRate: anim.frameRate,
                 repeat: anim.repeat === undefined ? -1 : anim.repeat
             });
         }
 
         // Destroy temp texture.
-        game.textures.get(config.spriteSheet.key + '-temp').destroy();
+        textures.get(config.spriteSheet.key + '-temp').destroy();
     }
 
     // Destroy textures that are not longer needed.
     // NOTE: This doesn't remove the textures from TextureManager.list.
     //       However, it does destroy source image data.
-    game.textures.get(config.spriteSheet.key).destroy();
-    game.textures.get(config.paletteKey).destroy();
+    textures.get(config.spriteSheet.key).destroy();
+    textures.get(config.paletteKey).destroy();
 }
